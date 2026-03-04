@@ -1,0 +1,242 @@
+// ─── pages/MenuPage.jsx ───────────────────────────────────────────────────────
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useCart } from "../hooks/useCart.js";
+import { getMenu, getCategories } from "../services/menuService.js";
+import FoodCard from "../components/FoodCard.jsx";
+import BottomNav from "../components/BottomNav.jsx";
+import Loader from "../components/Loader.jsx";
+import { pink, white } from "../components/theme.js";
+
+export default function MenuPage() {
+  const nav = useNavigate();
+  const { addItem, removeItem, getQty, itemCount, total } = useCart();
+  const [items, setItems] = useState([]);
+  const [cats, setCats] = useState([]);
+  const [cat, setCat] = useState("");
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getCategories().then((r) => {
+      setCats(r.data);
+      setCat(r.data[0] || "");
+    });
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    getMenu({ category: cat, search }).then((r) => {
+      setItems(r.data);
+      setLoading(false);
+    });
+  }, [cat, search]);
+
+  return (
+    <div
+      style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          background: white,
+          padding: "10px 16px",
+          borderBottom: "1px solid #eee",
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 10,
+          }}
+        >
+          <div style={{ color: pink, fontWeight: 900, fontSize: 22 }}>
+            আড্ডা
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <span
+              style={{
+                background: pink,
+                color: white,
+                borderRadius: 15,
+                padding: "4px 12px",
+                fontSize: 11,
+                fontWeight: 600,
+              }}
+            >
+              Dining ▾
+            </span>
+            <button
+              onClick={() => nav("/cart")}
+              style={{
+                background: "#222",
+                color: white,
+                border: "none",
+                borderRadius: 15,
+                padding: "4px 12px",
+                fontSize: 11,
+                cursor: "pointer",
+              }}
+            >
+              Done
+            </button>
+          </div>
+        </div>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="🔍 Search Your Food"
+          style={{
+            width: "100%",
+            padding: "9px 14px",
+            borderRadius: 22,
+            border: "1px solid #eee",
+            fontSize: 13,
+            boxSizing: "border-box",
+            outline: "none",
+          }}
+        />
+      </div>
+
+      {/* Banner */}
+      <div
+        style={{
+          background: "linear-gradient(135deg,#1a1a2e 0%,#e91e8c 100%)",
+          margin: "12px 12px 0",
+          borderRadius: 14,
+          padding: "14px 18px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <div>
+          <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 11 }}>
+            Ramadan
+          </div>
+          <div
+            style={{
+              color: white,
+              fontWeight: 900,
+              fontSize: 22,
+              lineHeight: 1,
+            }}
+          >
+            IFTAR
+          </div>
+          <div
+            style={{
+              color: "rgba(255,255,255,0.85)",
+              fontSize: 11,
+              marginTop: 4,
+            }}
+          >
+            Special Offer 40% off
+          </div>
+        </div>
+        <div style={{ fontSize: 54 }}>🌙</div>
+      </div>
+
+      {/* Category chips */}
+      <div
+        style={{
+          display: "flex",
+          gap: 8,
+          padding: "10px 12px",
+          overflowX: "auto",
+        }}
+      >
+        {cats.map((c) => (
+          <button
+            key={c}
+            onClick={() => setCat(c)}
+            style={{
+              whiteSpace: "nowrap",
+              padding: "6px 16px",
+              borderRadius: 20,
+              border: `1.5px solid ${cat === c ? pink : "#ddd"}`,
+              background: cat === c ? pink : white,
+              color: cat === c ? white : "#555",
+              fontSize: 12,
+              cursor: "pointer",
+              fontWeight: cat === c ? 700 : 400,
+            }}
+          >
+            {c}
+          </button>
+        ))}
+      </div>
+
+      {/* Food list */}
+      <div style={{ flex: 1, padding: "0 12px 8px" }}>
+        <div style={{ fontWeight: 700, marginBottom: 10, color: "#333" }}>
+          {cat}
+        </div>
+        {loading ? (
+          <Loader />
+        ) : (
+          items.map((f) => (
+            <FoodCard
+              key={f._id}
+              item={f}
+              qty={getQty(f._id)}
+              onAdd={() => addItem(f)}
+              onRemove={() => removeItem(f._id)}
+            />
+          ))
+        )}
+        {!loading && items.length === 0 && (
+          <div style={{ textAlign: "center", color: "#aaa", padding: 40 }}>
+            No items found
+          </div>
+        )}
+      </div>
+
+      {/* Cart bar */}
+      {itemCount > 0 && (
+        <div
+          onClick={() => nav("/cart")}
+          style={{
+            background: pink,
+            margin: "0 12px 12px",
+            borderRadius: 28,
+            padding: "14px 20px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            cursor: "pointer",
+            boxShadow: "0 4px 16px rgba(233,30,140,0.4)",
+          }}
+        >
+          <span
+            style={{
+              background: "rgba(255,255,255,0.3)",
+              color: white,
+              borderRadius: "50%",
+              width: 26,
+              height: 26,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: 700,
+              fontSize: 12,
+            }}
+          >
+            {itemCount}
+          </span>
+          <span style={{ color: white, fontWeight: 700 }}>
+            Your Cart · ₹{total}
+          </span>
+          <span style={{ color: white, fontWeight: 700 }}>View Cart ›</span>
+        </div>
+      )}
+
+      <BottomNav />
+    </div>
+  );
+}
