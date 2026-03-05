@@ -220,8 +220,11 @@ export default function MenuPage() {
         <div
           onClick={() => nav("/cart")}
           style={{
+            position: "fixed",
+            bottom: 70,
+            left: 12,
+            right: 12,
             background: pink,
-            margin: "0 12px 12px",
             borderRadius: 28,
             padding: "14px 20px",
             display: "flex",
@@ -229,6 +232,7 @@ export default function MenuPage() {
             alignItems: "center",
             cursor: "pointer",
             boxShadow: "0 4px 16px rgba(233,30,140,0.4)",
+            zIndex: 20,
           }}
         >
           <span
