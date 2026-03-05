@@ -14,6 +14,8 @@ import PayDonePage from "./pages/PayDonePage.jsx";
 import OrdersPage from "./pages/OrdersPage.jsx";
 import ReOrderPage from "./pages/ReOrderPage.jsx";
 import AccountPage from "./pages/AccountPage.jsx";
+import EditProfilePage from "./pages/EditProfilePage.jsx";
+import InvoicePage from "./pages/InvoicePage.jsx";
 
 const PrivateRoute = ({ children }) => {
   const { user } = useAuth();
@@ -113,6 +115,15 @@ export default function App() {
               }
             />
             <Route path="*" element={<Navigate to="/" replace />} />
+            <Route
+              path="/edit"
+              element={
+                <PrivateRoute>
+                  <EditProfilePage />
+                </PrivateRoute>
+              }
+            />
+            <Route path="/invoices" element={<InvoicePage />} />
           </Routes>
         </div>
       </div>

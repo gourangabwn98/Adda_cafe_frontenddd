@@ -1,4 +1,4 @@
-// ─── pages/BillPage.jsx ───────────────────────────────────────────────────────
+// ─── pages/BillPage.jsx ─────────────────────────────────────────
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getOrderById } from "../services/orderService.js";
@@ -21,15 +21,22 @@ export default function BillPage() {
 
   return (
     <div
-      style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "100vh",
+        background: "#f8f8f8",
+      }}
     >
       <TopBar title="Generate Bill" back />
+
+      {/* SCROLL AREA */}
       <div
         style={{
           flex: 1,
           overflowY: "auto",
           padding: 16,
-          background: "#f8f8f8",
+          paddingBottom: 120, // ⭐ important
         }}
       >
         <div
@@ -41,6 +48,7 @@ export default function BillPage() {
             textAlign: "center",
           }}
         >
+          {/* LOGO */}
           <div
             style={{
               width: 64,
@@ -56,13 +64,16 @@ export default function BillPage() {
           >
             ☕
           </div>
+
           <div style={{ fontWeight: 900, fontSize: 18, color: dark }}>
             ADDA CAFE
           </div>
+
           <div style={{ color: "#999", fontSize: 11, marginBottom: 18 }}>
             {new Date(order.createdAt).toLocaleString()}
           </div>
 
+          {/* TOTAL */}
           <div
             style={{
               background: "#ffd700",
@@ -75,6 +86,7 @@ export default function BillPage() {
           >
             Total Payment
           </div>
+
           <div
             style={{
               fontWeight: 900,
@@ -86,6 +98,7 @@ export default function BillPage() {
             ₹{order.total}
           </div>
 
+          {/* ITEMS */}
           {order.items.map((f, i) => (
             <div
               key={i}
@@ -100,9 +113,12 @@ export default function BillPage() {
               <span>
                 {f.name} × {f.qty}
               </span>
+
               <span>₹{f.price * f.qty}</span>
             </div>
           ))}
+
+          {/* GST */}
           <div
             style={{
               display: "flex",
@@ -115,6 +131,8 @@ export default function BillPage() {
             <span>GST (18%)</span>
             <span>₹{order.tax}</span>
           </div>
+
+          {/* DISCOUNT */}
           {order.discount > 0 && (
             <div
               style={{
@@ -130,7 +148,7 @@ export default function BillPage() {
             </div>
           )}
 
-          {/* Barcode */}
+          {/* BARCODE */}
           <div
             style={{
               margin: "18px 0",
@@ -158,20 +176,31 @@ export default function BillPage() {
                 />
               ))}
             </div>
+
             <div style={{ fontSize: 10, color: "#888", letterSpacing: 2 }}>
               {order.orderId}
             </div>
           </div>
+
           <div style={{ color: "#aaa", fontSize: 11 }}>
             THANKS FOR VISIT AGAIN...
           </div>
         </div>
       </div>
-      <div style={{ padding: 16 }}>
+
+      {/* PAYMENT BUTTON */}
+      <div
+        style={{
+          padding: 16,
+          paddingBottom: 80, // ⭐ prevents hiding behind BottomNav
+          background: "#f8f8f8",
+        }}
+      >
         <PinkBtn onClick={() => nav(`/payment/${id}`)}>
           Proceed to Payment
         </PinkBtn>
       </div>
+
       <BottomNav />
     </div>
   );
