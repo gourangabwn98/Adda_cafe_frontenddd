@@ -12,19 +12,24 @@ const NAV = [
 export default function BottomNav() {
   const nav = useNavigate();
   const loc = useLocation();
+
   return (
     <div
       style={{
         display: "flex",
         borderTop: "1px solid #eee",
         background: white,
-        position: "sticky",
+        position: "fixed", // ⭐ changed from sticky
         bottom: 0,
-        zIndex: 10,
+        left: 0,
+        width: "100%",
+        zIndex: 100,
+        height: 60,
       }}
     >
       {NAV.map((i) => {
         const active = loc.pathname === i.path;
+
         return (
           <button
             key={i.label}
@@ -38,10 +43,12 @@ export default function BottomNav() {
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
+              justifyContent: "center",
               gap: 2,
             }}
           >
             <span style={{ fontSize: 18 }}>{i.icon}</span>
+
             <span
               style={{
                 fontSize: 10,

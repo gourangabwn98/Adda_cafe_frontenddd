@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../hooks/useCart.js";
-import { getMenu, getCategories } from "../services/menuService.js";
+import { getMenu, getCategoriesWithImage } from "../services/menuService.js";
 import FoodCard from "../components/FoodCard.jsx";
 import BottomNav from "../components/BottomNav.jsx";
 import Loader from "../components/Loader.jsx";
@@ -11,20 +11,25 @@ import { pink, white } from "../components/theme.js";
 export default function MenuPage() {
   const nav = useNavigate();
   const { addItem, removeItem, getQty, itemCount, total } = useCart();
+
   const [items, setItems] = useState([]);
   const [cats, setCats] = useState([]);
   const [cat, setCat] = useState("");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
+  // Fetch categories
   useEffect(() => {
-    getCategories().then((r) => {
+    getCategoriesWithImage().then((r) => {
       setCats(r.data);
-      setCat(r.data[0] || "");
+      setCat(r.data[0]?.category || "");
     });
   }, []);
 
+  // Fetch menu items
   useEffect(() => {
+    if (!cat) return;
+
     setLoading(true);
     getMenu({ category: cat, search }).then((r) => {
       setItems(r.data);
@@ -58,6 +63,7 @@ export default function MenuPage() {
           <div style={{ color: pink, fontWeight: 900, fontSize: 22 }}>
             আড্ডা
           </div>
+
           <div style={{ display: "flex", gap: 8 }}>
             <span
               style={{
@@ -71,6 +77,7 @@ export default function MenuPage() {
             >
               Dining ▾
             </span>
+
             <button
               onClick={() => nav("/cart")}
               style={{
@@ -87,6 +94,8 @@ export default function MenuPage() {
             </button>
           </div>
         </div>
+
+        {/* Search */}
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -119,6 +128,7 @@ export default function MenuPage() {
           <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 11 }}>
             Ramadan
           </div>
+
           <div
             style={{
               color: white,
@@ -129,6 +139,7 @@ export default function MenuPage() {
           >
             IFTAR
           </div>
+
           <div
             style={{
               color: "rgba(255,255,255,0.85)",
@@ -139,44 +150,50 @@ export default function MenuPage() {
             Special Offer 40% off
           </div>
         </div>
+
         <div style={{ fontSize: 54 }}>🌙</div>
       </div>
 
-      {/* Category chips */}
+      {/* Category Chips with Image */}
       <div
+        className="hide-scroll"
         style={{
           display: "flex",
-          gap: 8,
+          gap: 12,
           padding: "10px 12px",
           overflowX: "auto",
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
         }}
       >
         {cats.map((c) => (
           <button
-            key={c}
-            onClick={() => setCat(c)}
+            key={c.category}
+            onClick={() => setCat(c.category)}
             style={{
-              whiteSpace: "nowrap",
-              padding: "6px 16px",
-              borderRadius: 20,
-              border: `1.5px solid ${cat === c ? pink : "#ddd"}`,
-              background: cat === c ? pink : white,
-              color: cat === c ? white : "#555",
-              fontSize: 12,
+              borderRadius: "50%",
+              border: `2px solid ${cat === c.category ? pink : "#ddd"}`,
+              background: white,
+              padding: 8,
               cursor: "pointer",
-              fontWeight: cat === c ? 700 : 400,
+              minWidth: 60,
+              minHeight: 60,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            {c}
+            <span style={{ fontSize: 30 }}>{c.categoryImage}</span>
           </button>
         ))}
       </div>
 
-      {/* Food list */}
+      {/* Food List */}
       <div style={{ flex: 1, padding: "0 12px 8px" }}>
         <div style={{ fontWeight: 700, marginBottom: 10, color: "#333" }}>
           {cat}
         </div>
+
         {loading ? (
           <Loader />
         ) : (
@@ -190,6 +207,7 @@ export default function MenuPage() {
             />
           ))
         )}
+
         {!loading && items.length === 0 && (
           <div style={{ textAlign: "center", color: "#aaa", padding: 40 }}>
             No items found
@@ -197,7 +215,7 @@ export default function MenuPage() {
         )}
       </div>
 
-      {/* Cart bar */}
+      {/* Cart Bar */}
       {itemCount > 0 && (
         <div
           onClick={() => nav("/cart")}
@@ -229,9 +247,11 @@ export default function MenuPage() {
           >
             {itemCount}
           </span>
+
           <span style={{ color: white, fontWeight: 700 }}>
             Your Cart · ₹{total}
           </span>
+
           <span style={{ color: white, fontWeight: 700 }}>View Cart ›</span>
         </div>
       )}
