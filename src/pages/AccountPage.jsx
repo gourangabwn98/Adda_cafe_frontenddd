@@ -1,274 +1,191 @@
-// ─── pages/MenuPage.jsx ───────────────────────────────────────────────────────
-import { useState, useEffect } from "react";
+// ─── pages/AccountPage.jsx ───────────────────────────────────────────────────
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useCart } from "../hooks/useCart.js";
-import { getMenu, getCategoriesWithImage } from "../services/menuService.js";
-import { changeOrderTypeById } from "../services/orderService.js";
-
-import FoodCard from "../components/FoodCard.jsx";
+import { useAuth } from "../hooks/useAuth.js";
+import { updateProfile } from "../services/authService.js";
 import BottomNav from "../components/BottomNav.jsx";
-import Loader from "../components/Loader.jsx";
+import PinkBtn from "../components/PinkBtn.jsx";
 import { pink, white } from "../components/theme.js";
+import toast from "react-hot-toast";
 
-export default function MenuPage() {
+export default function AccountPage() {
   const nav = useNavigate();
-  const { addItem, removeItem, getQty, itemCount, total } = useCart();
+  const { user, logout, updateUser } = useAuth();
+  const [vegMode, setVegMode] = useState(user?.vegMode || false);
+  const [saving, setSaving] = useState(false);
 
-  const [items, setItems] = useState([]);
-  const [cats, setCats] = useState([]);
-  const [cat, setCat] = useState("");
-  const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
-
-  const [orderType, setOrderType] = useState("Dining");
-  const [vegOnly, setVegOnly] = useState(false);
-
-  const orderId = localStorage.getItem("orderId");
-
-  // Fetch categories
-  useEffect(() => {
-    getCategoriesWithImage().then((r) => {
-      setCats(r.data);
-      setCat(r.data[0]?.category || "");
-    });
-  }, []);
-
-  // Fetch menu
-  useEffect(() => {
-    if (!cat) return;
-
-    setLoading(true);
-
-    getMenu({
-      category: cat,
-      search,
-      vegOnly,
-    }).then((r) => {
-      setItems(r.data);
-      setLoading(false);
-    });
-  }, [cat, search, vegOnly]);
-
-  // Change order type
-  const handleOrderType = async (type) => {
-    setOrderType(type);
-
+  const toggleVeg = async () => {
+    const next = !vegMode;
+    setVegMode(next);
     try {
-      await changeOrderTypeById(orderId, {
-        orderType: type,
-      });
-    } catch (err) {
-      console.log(err);
+      setSaving(true);
+      const { data } = await updateProfile({ vegMode: next });
+      updateUser(data);
+      toast.success(next ? "Veg Mode ON 🥗" : "Veg Mode OFF");
+    } catch {
+      setVegMode(!next);
+    } finally {
+      setSaving(false);
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    nav("/");
+    toast.success("Logged out!");
+  };
+
   return (
-    <div style={{ minHeight: "100vh", paddingBottom: 120 }}>
-      {/* Header */}
-      <div
-        style={{
-          background: white,
-          padding: "10px 16px",
-          borderBottom: "1px solid #eee",
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 10,
-          }}
-        >
-          <div style={{ color: pink, fontWeight: 900, fontSize: 22 }}>
-            আড্ডা
+    <div
+      style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
+    >
+      {/* Pink header */}
+      <div style={{ background: pink, padding: "24px 16px 48px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div
+            style={{
+              width: 60,
+              height: 60,
+              background: "rgba(255,255,255,0.25)",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 30,
+            }}
+          >
+            👤
           </div>
-
-          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-            {/* Order Type Dropdown */}
-            <select
-              value={orderType}
-              onChange={(e) => handleOrderType(e.target.value)}
-              style={{
-                background: pink,
-                color: white,
-                border: "none",
-                borderRadius: 16,
-                padding: "5px 12px",
-                fontSize: 11,
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
-              <option value="Dining">Dining</option>
-              <option value="Take Away">Take Away</option>
-            </select>
-
-            {/* Veg Toggle Switch */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                fontSize: 12,
-                fontWeight: 600,
-              }}
-            >
-              <span>🍗</span>
-
-              <div
-                onClick={() => setVegOnly(!vegOnly)}
-                style={{
-                  width: 42,
-                  height: 22,
-                  background: vegOnly ? "#2ecc71" : "#ccc",
-                  borderRadius: 20,
-                  position: "relative",
-                  cursor: "pointer",
-                  transition: "0.3s",
-                }}
-              >
-                <div
-                  style={{
-                    width: 18,
-                    height: 18,
-                    background: white,
-                    borderRadius: "50%",
-                    position: "absolute",
-                    top: 2,
-                    left: vegOnly ? 22 : 2,
-                    transition: "0.3s",
-                  }}
-                />
-              </div>
-
-              <span>🥦</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ color: white, fontWeight: 800, fontSize: 17 }}>
+              {user?.name || "User"}
+            </div>
+            <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 12 }}>
+              +91 {user?.phone}
             </div>
           </div>
-        </div>
-
-        {/* Search */}
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="🔍 Search Your Food"
-          style={{
-            width: "100%",
-            padding: "9px 14px",
-            borderRadius: 22,
-            border: "1px solid #eee",
-            fontSize: 13,
-            boxSizing: "border-box",
-            outline: "none",
-          }}
-        />
-      </div>
-
-      {/* Categories */}
-      <div
-        style={{
-          display: "flex",
-          gap: 12,
-          padding: "10px 12px",
-          overflowX: "auto",
-          scrollbarWidth: "none",
-        }}
-      >
-        {cats.map((c) => (
           <button
-            key={c.category}
-            onClick={() => setCat(c.category)}
             style={{
-              borderRadius: "50%",
-              border: `2px solid ${cat === c.category ? pink : "#ddd"}`,
-              background: white,
-              padding: 8,
-              cursor: "pointer",
-              minWidth: 60,
-              minHeight: 60,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <span style={{ fontSize: 30 }}>{c.categoryImage}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Food List */}
-      <div style={{ padding: "0 12px 10px" }}>
-        <div style={{ fontWeight: 700, marginBottom: 10 }}>{cat}</div>
-
-        {loading ? (
-          <Loader />
-        ) : (
-          items.map((f) => (
-            <FoodCard
-              key={f._id}
-              item={f}
-              qty={getQty(f._id)}
-              onAdd={() => addItem(f)}
-              onRemove={() => removeItem(f._id)}
-            />
-          ))
-        )}
-
-        {!loading && items.length === 0 && (
-          <div style={{ textAlign: "center", color: "#aaa", padding: 40 }}>
-            No items found
-          </div>
-        )}
-      </div>
-
-      {/* Cart Bar */}
-      {itemCount > 0 && (
-        <div
-          onClick={() => nav("/cart")}
-          style={{
-            position: "fixed",
-            bottom: 70,
-            left: 12,
-            right: 12,
-            background: pink,
-            borderRadius: 28,
-            padding: "14px 20px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            cursor: "pointer",
-            boxShadow: "0 4px 16px rgba(233,30,140,0.4)",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(255,255,255,0.3)",
+              background: "rgba(255,255,255,0.2)",
+              border: "none",
               color: white,
-              borderRadius: "50%",
-              width: 26,
-              height: 26,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 700,
-              fontSize: 12,
+              borderRadius: 16,
+              padding: "5px 14px",
+              fontSize: 11,
+              cursor: "pointer",
             }}
           >
-            {itemCount}
-          </span>
-
-          <span style={{ color: white, fontWeight: 700 }}>
-            Your Cart · ₹{total}
-          </span>
-
-          <span style={{ color: white, fontWeight: 700 }}>View Cart ›</span>
+            Edit
+          </button>
         </div>
-      )}
+      </div>
+
+      <div style={{ flex: 1, overflowY: "auto", padding: 16, marginTop: -28 }}>
+        {/* Preference card */}
+        <Card title="Your Preference">
+          <Row2 icon="🥗" label="Veg Mode">
+            <div
+              onClick={toggleVeg}
+              style={{
+                width: 46,
+                height: 26,
+                borderRadius: 13,
+                background: vegMode ? "green" : "#ddd",
+                cursor: "pointer",
+                position: "relative",
+                transition: "background .3s",
+                opacity: saving ? 0.5 : 1,
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  top: 3,
+                  left: vegMode ? 22 : 3,
+                  width: 20,
+                  height: 20,
+                  borderRadius: "50%",
+                  background: white,
+                  transition: "left .3s",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                }}
+              />
+            </div>
+          </Row2>
+          <Row2 icon="🌐" label="Language">
+            <span style={{ color: pink, fontSize: 13, fontWeight: 600 }}>
+              {user?.language || "English"}
+            </span>
+          </Row2>
+        </Card>
+
+        {/* Invoice */}
+        <Card title="Invoice">
+          <Row2
+            icon="📥"
+            label="Download Invoices"
+            onClick={() => nav("/orders")}
+          >
+            <span style={{ color: "#bbb" }}>›</span>
+          </Row2>
+        </Card>
+
+        {/* More */}
+        <Card title="More">
+          {[
+            ["💬", "Send Your Feedback"],
+            ["ℹ️", "About Us"],
+            ["⚙️", "Settings"],
+          ].map(([icon, label]) => (
+            <Row2 key={label} icon={icon} label={label}>
+              <span style={{ color: "#bbb" }}>›</span>
+            </Row2>
+          ))}
+        </Card>
+
+        <PinkBtn
+          onClick={handleLogout}
+          style={{ background: "#f44336", marginTop: 8 }}
+        >
+          Log Out
+        </PinkBtn>
+      </div>
 
       <BottomNav />
     </div>
   );
 }
+
+const Card = ({ title, children }) => (
+  <div
+    style={{
+      background: white,
+      borderRadius: 14,
+      padding: 16,
+      marginBottom: 14,
+      boxShadow: "0 1px 8px rgba(0,0,0,0.07)",
+    }}
+  >
+    <div style={{ fontWeight: 700, marginBottom: 12, fontSize: 15 }}>
+      {title}
+    </div>
+    {children}
+  </div>
+);
+const Row2 = ({ icon, label, children, onClick }) => (
+  <div
+    onClick={onClick}
+    style={{
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      padding: "9px 0",
+      borderBottom: "1px solid #f5f5f5",
+      cursor: onClick ? "pointer" : "default",
+    }}
+  >
+    <span style={{ fontSize: 18 }}>{icon}</span>
+    <span style={{ flex: 1, fontSize: 13 }}>{label}</span>
+    {children}
+  </div>
+);
