@@ -1,127 +1,132 @@
-// ─── pages/HomePage.jsx ───────────────────────────────────────────────────────
+// ─── pages/HomePage.jsx ─────────────────────────────────────────
 import { useNavigate } from "react-router-dom";
-import { pink, dark, white } from "../components/theme.js";
+import { changeOrderTypeById } from "../services/orderService";
 
 export default function HomePage() {
   const nav = useNavigate();
+  const orderId = localStorage.getItem("orderId");
+
+  const changeType = async (type) => {
+    try {
+      if (orderId) {
+        await changeOrderTypeById(orderId, type);
+      }
+
+      localStorage.setItem("orderType", type);
+      nav("/menu");
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const cardBase = {
+    width: "100%",
+    height: 250,
+    borderRadius: 28,
+    overflow: "hidden",
+    position: "relative",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  };
+
+  const overlay = {
+    position: "absolute",
+    inset: 0,
+    background: "rgba(0,0,0,0.35)",
+  };
+
+  const text = {
+    position: "relative",
+    color: "white",
+    fontWeight: 700,
+    fontSize: 28,
+    textAlign: "center",
+    zIndex: 2,
+  };
+
   return (
     <div
       style={{
         minHeight: "100vh",
-        background: dark,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 28,
-        gap: 32,
+        background: "#f3f3f3",
+        padding: 16,
       }}
     >
-      {/* Logo */}
-      <div style={{ textAlign: "center" }}>
-        <div
-          style={{
-            background: pink,
-            borderRadius: "50%",
-            width: 90,
-            height: 90,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            margin: "0 auto 14px",
-            fontSize: 40,
-          }}
-        >
-          🍽️
-        </div>
-        <div
-          style={{
-            color: white,
-            fontSize: 30,
-            fontWeight: 900,
-            letterSpacing: 3,
-          }}
-        >
-          আড্ডা
-        </div>
-        <div
-          style={{ color: pink, fontSize: 13, letterSpacing: 5, marginTop: 2 }}
-        >
-          ADDA CAFE
-        </div>
-      </div>
-
-      {/* Order Type */}
-      <div style={{ display: "flex", gap: 16 }}>
-        {[
-          { t: "Take Away", i: "🛍️" },
-          { t: "Dining", i: "🪑" },
-        ].map(({ t, i }) => (
-          <button
-            key={t}
-            onClick={() => nav("/menu")}
-            style={{
-              background: t === "Take Away" ? pink : "transparent",
-              border: `2px solid ${pink}`,
-              color: white,
-              borderRadius: 30,
-              padding: "16px 22px",
-              fontWeight: 700,
-              cursor: "pointer",
-              fontSize: 14,
-              textAlign: "center",
-            }}
-          >
-            <div style={{ fontSize: 32, marginBottom: 8 }}>{i}</div>
-            {t}
-          </button>
-        ))}
-      </div>
-
-      {/* QR */}
+      {/* HEADER */}
       <div
         style={{
-          background: "rgba(255,255,255,0.07)",
-          borderRadius: 18,
-          padding: 24,
-          textAlign: "center",
-          width: "100%",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 30,
         }}
       >
-        <div style={{ color: "#aaa", fontSize: 12, marginBottom: 12 }}>
-          Scan QR to Start Ordering
+        {/* Logo */}
+        <div style={{ fontSize: 32, fontWeight: 900, color: "#7b3f3f" }}>
+          আড্ডা
         </div>
-        <div
+
+        {/* Language Button */}
+        <button
           style={{
-            width: 130,
-            height: 130,
-            background: white,
-            borderRadius: 14,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            margin: "0 auto",
-            fontSize: 70,
+            border: "2px solid #ff2e6a",
+            background: "white",
+            borderRadius: 20,
+            padding: "6px 14px",
+            fontSize: 13,
+            cursor: "pointer",
+            color: "#ff2e6a",
+            fontWeight: 600,
           }}
         >
-          ⬛
+          English
+        </button>
+      </div>
+
+      {/* TAKE AWAY CARD */}
+      <div
+        onClick={() => changeType("Take Away")}
+        style={{
+          ...cardBase,
+          border: "6px solid #FFC107",
+          transform: "rotate(-3deg)",
+          marginBottom: 30,
+          backgroundImage:
+            "url(https://images.unsplash.com/photo-1600891964599-f61ba0e24092)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <div style={overlay}></div>
+
+        <div style={text}>
+          <div style={{ fontSize: 40 }}>🥡</div>
+          Take A Way
         </div>
       </div>
 
-      <button
-        onClick={() => nav("/login")}
+      {/* DINING CARD */}
+      <div
+        onClick={() => changeType("Dining")}
         style={{
-          color: pink,
-          background: "none",
-          border: `1.5px solid ${pink}`,
-          borderRadius: 22,
-          padding: "9px 28px",
-          cursor: "pointer",
-          fontWeight: 600,
+          ...cardBase,
+          border: "6px solid #ff2e6a",
+          transform: "rotate(3deg)",
+          backgroundImage:
+            "url(https://images.unsplash.com/photo-1550547660-d9450f859349)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
         }}
       >
-        Login / Sign Up
-      </button>
+        <div style={overlay}></div>
+
+        <div style={text}>
+          <div style={{ fontSize: 40 }}>🍔</div>
+          Dining
+        </div>
+      </div>
     </div>
   );
 }
