@@ -3,10 +3,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../hooks/useCart.js";
 import { getMenu, getCategoriesWithImage } from "../services/menuService.js";
+
 import FoodCard from "../components/FoodCard.jsx";
 import BottomNav from "../components/BottomNav.jsx";
 import Loader from "../components/Loader.jsx";
 import { pink, white } from "../components/theme.js";
+import { changeOrderTypeById } from "../services/orderService.js";
 
 export default function MenuPage() {
   const nav = useNavigate();
@@ -18,6 +20,11 @@ export default function MenuPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
+  const [orderType, setOrderType] = useState("Dining");
+  const [vegOnly, setVegOnly] = useState(false);
+
+  const orderId = localStorage.getItem("orderId");
+
   // Fetch categories
   useEffect(() => {
     getCategoriesWithImage().then((r) => {
@@ -26,21 +33,37 @@ export default function MenuPage() {
     });
   }, []);
 
-  // Fetch menu items
+  // Fetch menu
   useEffect(() => {
     if (!cat) return;
 
     setLoading(true);
-    getMenu({ category: cat, search }).then((r) => {
+
+    getMenu({
+      category: cat,
+      search,
+      vegOnly,
+    }).then((r) => {
       setItems(r.data);
       setLoading(false);
     });
-  }, [cat, search]);
+  }, [cat, search, vegOnly]);
+
+  // Change order type
+  const handleOrderType = async (type) => {
+    setOrderType(type);
+
+    try {
+      await changeOrderTypeById(orderId, {
+        orderType: type,
+      });
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
   return (
-    <div
-      style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
-    >
+    <div style={{ minHeight: "100vh", paddingBottom: 120 }}>
       {/* Header */}
       <div
         style={{
@@ -64,33 +87,41 @@ export default function MenuPage() {
             আড্ডা
           </div>
 
-          <div style={{ display: "flex", gap: 8 }}>
-            <span
+          <div style={{ display: "flex", gap: 10 }}>
+            {/* Order Type Dropdown */}
+            <select
+              value={orderType}
+              onChange={(e) => handleOrderType(e.target.value)}
               style={{
                 background: pink,
                 color: white,
-                borderRadius: 15,
-                padding: "4px 12px",
+                border: "none",
+                borderRadius: 16,
+                padding: "5px 12px",
                 fontSize: 11,
                 fontWeight: 600,
-              }}
-            >
-              Dining ▾
-            </span>
-
-            <button
-              onClick={() => nav("/cart")}
-              style={{
-                background: "#222",
-                color: white,
-                border: "none",
-                borderRadius: 15,
-                padding: "4px 12px",
-                fontSize: 11,
                 cursor: "pointer",
               }}
             >
-              Done
+              <option value="Dining">Dining</option>
+              <option value="Take Away">Take Away</option>
+            </select>
+
+            {/* Veg Toggle */}
+            <button
+              onClick={() => setVegOnly(!vegOnly)}
+              style={{
+                background: vegOnly ? "#2ecc71" : "#ddd",
+                color: vegOnly ? white : "#555",
+                border: "none",
+                borderRadius: 16,
+                padding: "5px 12px",
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              {vegOnly ? "🥦 Veg Only" : "🍗 All"}
             </button>
           </div>
         </div>
@@ -116,7 +147,7 @@ export default function MenuPage() {
       <div
         style={{
           background: "linear-gradient(135deg,#1a1a2e 0%,#e91e8c 100%)",
-          margin: "12px 12px 0",
+          margin: "12px",
           borderRadius: 14,
           padding: "14px 18px",
           display: "flex",
@@ -154,16 +185,14 @@ export default function MenuPage() {
         <div style={{ fontSize: 54 }}>🌙</div>
       </div>
 
-      {/* Category Chips with Image */}
+      {/* Categories */}
       <div
-        className="hide-scroll"
         style={{
           display: "flex",
           gap: 12,
           padding: "10px 12px",
           overflowX: "auto",
           scrollbarWidth: "none",
-          msOverflowStyle: "none",
         }}
       >
         {cats.map((c) => (
@@ -189,10 +218,8 @@ export default function MenuPage() {
       </div>
 
       {/* Food List */}
-      <div style={{ flex: 1, padding: "0 12px 8px" }}>
-        <div style={{ fontWeight: 700, marginBottom: 10, color: "#333" }}>
-          {cat}
-        </div>
+      <div style={{ padding: "0 12px 10px" }}>
+        <div style={{ fontWeight: 700, marginBottom: 10 }}>{cat}</div>
 
         {loading ? (
           <Loader />
@@ -232,7 +259,6 @@ export default function MenuPage() {
             alignItems: "center",
             cursor: "pointer",
             boxShadow: "0 4px 16px rgba(233,30,140,0.4)",
-            zIndex: 20,
           }}
         >
           <span
@@ -260,6 +286,7 @@ export default function MenuPage() {
         </div>
       )}
 
+      {/* Bottom Navigation */}
       <BottomNav />
     </div>
   );
